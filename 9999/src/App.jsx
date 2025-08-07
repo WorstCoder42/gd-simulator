@@ -7,7 +7,7 @@ function AppContent() {
   return (
     <div className="app-container">
       <header className="header p-4 bg-gray-800 text-white flex justify-between items-center">
-        <h1 className="text-xl font-bold">Geometry Idle</h1>
+        <h1 className="text-xl font-bold">Average GD Player:</h1>
         <div>Skill: {playerSkill.toFixed(2)}</div>
       </header>
       <main className="p-4">

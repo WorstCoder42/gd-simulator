@@ -12,14 +12,18 @@ function gaussianRandom() {
 
 export default function LevelCard({ level }) {
   const { playerSkill, levelSkills, improveGlobalSkill, improveLevelSkill } = useContext(PlayerContext);
+  const [attempts, setAttempts] = useState(0);
+
   const [best, setBest] = useState(0);
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
 
   // 레벨별 현재 스킬 (없으면 1)
-  const lvlSkill = levelSkills[level.id] || 1;
+  const lvlSkill = levelSkills[level.id] * playerSkill || 1;
+  const finalSkill = lvlSkill * playerSkill || 1;
+
   const targetSkill = level.baseSkill * Math.pow(level.difficulty, level.id);
-  const skillRatio = lvlSkill / targetSkill;
+  const skillRatio = finalSkill / targetSkill;
 
   const attempt = () => {
     if (running) return;
@@ -44,10 +48,15 @@ export default function LevelCard({ level }) {
       if (elapsed >= steps) {
         clearInterval(interval);
         setRunning(false);
+
+        setAttempts(attempts + 1);
         setBest(prev => Math.max(prev, finalPercent));
-        // 스킬 증가: 글로벌 및 레벨별
-        improveGlobalSkill(1 / 10000);
-        improveLevelSkill(level.id, 1 / 100);
+        // 스킬 증가: 글로벌 및 레벨별 ( 현재 실력이 레벨 요구량보다 330배 이상 낮다면 글로벌 실력은 증가하지 않음 )
+        if (skillRatio >= 0.003) {
+          improveGlobalSkill(Math.sqrt(targetSkill) * finalPercent / 2000);
+        }
+        
+        improveLevelSkill(level.id, finalPercent / 100);
       }
     }, 16);
   };
@@ -55,7 +64,9 @@ export default function LevelCard({ level }) {
   return (
     <div className="card border p-4 rounded shadow">
       <h3 className="font-semibold mb-1">{level.name}</h3>
-      <p className="text-sm">Required Skill: {targetSkill.toFixed(1)}</p>
+      <p className="text-sm">Attempt {attempts}</p>
+
+      <p className="text-sm">Required Skill: {targetSkill.toFixed(0)}</p>
       <p className="text-sm">Level Skill: {lvlSkill.toFixed(2)}</p>
       <p className="text-sm mb-2">Best: {best.toFixed(1)}%</p>
       <button
